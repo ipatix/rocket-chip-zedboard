@@ -343,9 +343,9 @@ class WithTimebase(hertz: BigInt) extends Config((site, here, up) => {
 class WithDefaultMemPort extends Config((site, here, up) => {
   case ExtMem => Some(MemoryPortParams(MasterPortParams(
                       base = x"8000_0000",
-                      size = x"1000_0000",
+                      size = x"2_0000_0000",
                       beatBytes = site(MemoryBusKey).beatBytes,
-                      idBits = 4), 1))
+                      idBits = 6), 1))
 })
 
 class WithNoMemPort extends Config((site, here, up) => {
@@ -357,7 +357,7 @@ class WithDefaultMMIOPort extends Config((site, here, up) => {
                       base = x"6000_0000",
                       size = x"2000_0000",
                       beatBytes = site(MemoryBusKey).beatBytes,
-                      idBits = 4))
+                      idBits = 6))
 })
 
 class WithNoMMIOPort extends Config((site, here, up) => {

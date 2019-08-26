@@ -15,10 +15,10 @@ class WithDebugAPB extends freechips.rocketchip.subsystem.WithDebugAPB
 class BaseConfig extends Config(
   new WithDefaultMemPort() ++
   new WithDefaultMMIOPort() ++
-  new WithDefaultSlavePort() ++
+  new WithNoSlavePort() ++
   new WithTimebase(BigInt(1000000)) ++ // 1 MHz
   new WithDTS("freechips,rocketchip-unknown", Nil) ++
-  new WithNExtTopInterrupts(2) ++
+  new WithNExtTopInterrupts(3) ++
   new BaseSubsystemConfig()
 )
 
@@ -74,3 +74,4 @@ class MMIOPortOnlyConfig extends Config(
 
 class BaseFPGAConfig extends Config(new BaseConfig)
 class DefaultFPGAConfig extends Config(new WithNSmallCores(1) ++ new BaseFPGAConfig)
+class ADMPCIE9H7Config extends Config(new WithEdgeDataBits(256) ++ new WithNBigCores(1) ++ new BaseFPGAConfig)

@@ -6,10 +6,14 @@ OBJCOPY=riscv64-unknown-elf-objcopy
 all: $(bootrom_img)
 
 %.img: %.bin
-	dd if=$< of=$@ bs=128 count=1
+	dd if=$< of=$@ bs=8192 count=1
 
 %.bin: %.elf
 	$(OBJCOPY) -O binary $< $@
 
-%.elf: %.S linker.ld
-	$(GCC) -Tlinker.ld $< -nostdlib -static -Wl,--no-gc-sections -o $@
+devicetree.dtb: devicetree.dts
+	dtc -O dtb -o $@ $<
+
+.PRECIOUS: bootrom.elf
+%.elf: bootrom.S bootrom.c linker.ld devicetree.dtb
+	$(GCC) -Tlinker.ld bootrom.S bootrom.c -nostdlib -static -Wl,--no-gc-sections -o $@ -Os -Wall -Wextra

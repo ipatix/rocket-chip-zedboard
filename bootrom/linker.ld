@@ -7,5 +7,10 @@ SECTIONS
     . = ROM_BASE + 0x40;
     .text.hang : { *(.text.hang) }
     . = ROM_BASE + 0x80;
+    .text : { *(.text) }
+    .rodata : { *(.rodata) }
+    . = ROM_BASE + 0x2000;
     .rodata.dtb : { *(.rodata.dtb) }
+
+    /DISCARD/ : { *(*); }
 }
