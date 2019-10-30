@@ -6,7 +6,7 @@ OBJCOPY=riscv64-unknown-elf-objcopy
 all: $(bootrom_img)
 
 %.img: %.bin
-	dd if=$< of=$@ bs=8192 count=1
+	dd if=$< of=$@ bs=32768 count=1
 
 %.bin: %.elf
 	$(OBJCOPY) -O binary $< $@

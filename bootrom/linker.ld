@@ -9,7 +9,7 @@ SECTIONS
     . = ROM_BASE + 0x80;
     .text : { *(.text) }
     .rodata : { *(.rodata) }
-    . = ROM_BASE + 0x2000;
+    . = ROM_BASE + 0x8000;
     .rodata.dtb : { *(.rodata.dtb) }
 
     /DISCARD/ : { *(*); }

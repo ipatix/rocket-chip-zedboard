@@ -27,7 +27,26 @@ _hang:
 _bootrom_init:
   li    sp, DRAM_END
   addi  sp, sp, -64
+  li    t0, 0
+  // value at the stack base is used to signal completion of program loading
+  sd    t0, (sp)
+  csrr  t0, mhartid
+  bnez  t0, wait_for_main_hart
   jal   bootrom_main
+  // send signal to other harts to wake them up
+  li    t0, 1
+  sd    t0, (sp)
+  fence
+  j     prepare_boot
+
+wait_for_main_hart:
+  // check if the program loading is done
+  fence
+  ld    t0, (sp)
+  // wait as long as the value hasn't changed from 0 to 1
+  // using WFI and an IPI would be nicer, but it requires parsing the device tree to get the PLIC location
+  beqz  t0, wait_for_main_hart
+prepare_boot:
   mv    sp, zero
   csrr  a0, mhartid
   li    s0, DRAM_BASE
