@@ -1,4 +1,4 @@
-set sys_clock 150.000
+set sys_clock 50.000
 
 # create project
 create_project rocket_board_design rocket_board_design -part xcvu37p-fsvh2892-2-e-es1
@@ -13,12 +13,8 @@ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant:1.1 xlconstant_vec_1_0
 set_property -dict [list CONFIG.CONST_VAL {0}] [get_bd_cells xlconstant_vec_1_0]
 create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant:1.1 xlconstant_vec_1_1
 set_property -dict [list CONFIG.CONST_VAL {1}] [get_bd_cells xlconstant_vec_1_1]
-create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant:1.1 xlconstant_vec_2_0
-set_property -dict [list CONFIG.CONST_WIDTH {2} CONFIG.CONST_VAL {0}] [get_bd_cells xlconstant_vec_2_0]
 create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant:1.1 xlconstant_vec_4_0
 set_property -dict [list CONFIG.CONST_WIDTH {4} CONFIG.CONST_VAL {0}] [get_bd_cells xlconstant_vec_4_0]
-create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant:1.1 xlconstant_vec_7_0
-set_property -dict [list CONFIG.CONST_WIDTH {7} CONFIG.CONST_VAL {0}] [get_bd_cells xlconstant_vec_7_0]
 create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant:1.1 xlconstant_vec_22_0
 set_property -dict [list CONFIG.CONST_WIDTH {22} CONFIG.CONST_VAL {0}] [get_bd_cells xlconstant_vec_22_0]
 create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant:1.1 xlconstant_vec_32_0
@@ -132,12 +128,16 @@ set_property offset 0x60020000 [get_bd_addr_segs {ExampleRocketSystem_0/mmio_if/
 apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master {/clk_wiz_0/clk_sys } Clk_slave {/clk_wiz_0/clk_sys } Clk_xbar {/clk_wiz_0/clk_sys } Master {/ExampleRocketSystem_0/mmio_if} Slave {/axi_uart16550_1/S_AXI} intc_ip {/ExampleRocketSystem_0_axi_periph_1} master_apm {0}}  [get_bd_intf_pins axi_uart16550_1/S_AXI]
 set_property offset 0x60030000 [get_bd_addr_segs {ExampleRocketSystem_0/mmio_if/SEG_axi_uart16550_1_Reg}]
 
+# improve timing on mmio path
+set_property -dict [list CONFIG.S00_HAS_REGSLICE {4}] [get_bd_cells ExampleRocketSystem_0_axi_periph_1]
+
 ## connect UART interrupts
 create_bd_cell -type ip -vlnv xilinx.com:ip:xlconcat:2.1 xlconcat_irq
 set_property -dict [list CONFIG.NUM_PORTS {3}] [get_bd_cells xlconcat_irq]
 connect_bd_net [get_bd_pins axi_uartlite_0/interrupt] [get_bd_pins xlconcat_irq/In0]
 connect_bd_net [get_bd_pins axi_uartlite_1/interrupt] [get_bd_pins xlconcat_irq/In1]
 connect_bd_net [get_bd_pins axi_uart16550_0/ip2intc_irpt] [get_bd_pins xlconcat_irq/In2]
+connect_bd_net [get_bd_pins ExampleRocketSystem_0/interrupts] [get_bd_pins xlconcat_irq/dout]
 
 # connect additional reset pin to the outer port
 create_bd_port -dir I -type rst greset
@@ -189,16 +189,6 @@ connect_bd_net [get_bd_pins xlconstant_vec_1_0/dout] [get_bd_ports DBG_C]
 create_bd_port -dir O DBG_D
 connect_bd_net [get_bd_pins xlconstant_vec_1_1/dout] [get_bd_ports DBG_D]
 
-# Tie Rocket debug pins to 0
-connect_bd_net [get_bd_pins ExampleRocketSystem_0/debug_clockeddmi_dmi_req_valid] [get_bd_pins xlconstant_vec_1_0/dout]
-connect_bd_net [get_bd_pins ExampleRocketSystem_0/debug_clockeddmi_dmiClock] [get_bd_pins xlconstant_vec_1_0/dout]
-connect_bd_net [get_bd_pins ExampleRocketSystem_0/debug_clockeddmi_dmiReset] [get_bd_pins xlconstant_vec_1_0/dout]
-connect_bd_net [get_bd_pins ExampleRocketSystem_0/debug_clockeddmi_dmi_resp_ready] [get_bd_pins xlconstant_vec_1_0/dout]
-connect_bd_net [get_bd_pins ExampleRocketSystem_0/debug_clockeddmi_dmi_req_bits_addr] [get_bd_pins xlconstant_vec_7_0/dout]
-connect_bd_net [get_bd_pins ExampleRocketSystem_0/debug_clockeddmi_dmi_req_bits_data] [get_bd_pins xlconstant_vec_32_0/dout]
-connect_bd_net [get_bd_pins ExampleRocketSystem_0/debug_clockeddmi_dmi_req_bits_op] [get_bd_pins xlconstant_vec_2_0/dout]
-connect_bd_net [get_bd_pins ExampleRocketSystem_0/interrupts] [get_bd_pins xlconcat_irq/dout]
-
 # finish
 validate_bd_design
 save_bd_design
@@ -214,6 +204,12 @@ add_files -norecurse rocket_board_design/rocket_board_design.srcs/sources_1/bd/m
 import_files -fileset constrs_1 constraints.xdc
 
 update_compile_order -fileset sources_1
+
+set_property STEPS.PHYS_OPT_DESIGN.IS_ENABLED true [get_runs impl_1]
+set_property STEPS.PLACE_DESIGN.ARGS.DIRECTIVE Explore [get_runs impl_1]
+set_property STEPS.PHYS_OPT_DESIGN.ARGS.DIRECTIVE ExploreWithAggressiveHoldFix [get_runs impl_1]
+set_property STEPS.POST_ROUTE_PHYS_OPT_DESIGN.IS_ENABLED true [get_runs impl_1]
+set_property STEPS.POST_ROUTE_PHYS_OPT_DESIGN.ARGS.DIRECTIVE Explore [get_runs impl_1]
 
 launch_runs impl_1 -to_step write_bitstream -jobs 16
 wait_on_run impl_1

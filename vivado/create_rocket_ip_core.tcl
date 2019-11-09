@@ -2,9 +2,7 @@
 create_project rocket_ip_core rocket_ip_core
 import_files -flat -norecurse ../vsim/generated-src/freechips.rocketchip.system.ADMPCIE9H7Config.v
 import_files -flat -norecurse ../vsim/generated-src/freechips.rocketchip.system.ADMPCIE9H7Config/plusarg_reader.v
-import_files -flat -norecurse ../vsim/generated-src/freechips.rocketchip.system.ADMPCIE9H7Config/AsyncResetReg.v
 import_files -flat -norecurse ../vsim/generated-src/freechips.rocketchip.system.ADMPCIE9H7Config.behav_srams.v
-import_files -flat -norecurse ../src/main/resources/vsrc/EICG_wrapper.v
 update_compile_order -fileset sources_1
 set_property top ExampleRocketSystem [current_fileset]
 

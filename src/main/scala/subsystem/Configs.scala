@@ -382,3 +382,7 @@ class WithScratchpadsOnly extends Config((site, here, up) => {
         scratch = Some(0x80000000L))))
   }
 })
+
+class WithNoDebugPort extends Config((site, here, up) => {
+  case DebugModuleKey => None
+})

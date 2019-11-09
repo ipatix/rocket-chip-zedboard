@@ -43,7 +43,7 @@ typedef struct {
 } AXIUart16550;
 
 // 50 MHz
-#define AXI_CLOCK 150000000
+#define AXI_CLOCK 50000000
 
 #define UART16550_BAUD 115200
 #define CONSOLE_BAUD 115200
@@ -80,6 +80,7 @@ typedef struct {
 #define PROTOCOL_SET_MEM 0x22
 #define PROTOCOL_READ_GPIO 0x23
 #define PROTOCOL_BOOT 0x40
+#define PROTOCOL_GET_NUM_HARTS 0x48
 #define PROTOCOL_SET_BAUD 0x50
 #define PROTOCOL_OK 0xF0
 #define PROTOCOL_ERR 0xFE
@@ -93,6 +94,7 @@ typedef struct {
 typedef struct {
     AXIUartLite *uartLite;
     AXIUart16550 *uart16550;
+    uint64_t num_harts;
 } MS;
 
 static uint32_t div_round(uint32_t a, uint32_t b) {
@@ -285,9 +287,14 @@ static void protocol_set_baud(MS *ms) {
     }
 }
 
-void bootrom_main(void) {
+static void protocol_get_num_harts(MS *ms) {
+    uart_write_u64(ms, ms->num_harts);
+}
+
+void bootrom_main(uint64_t hart_count) {
     MS ms;
     memset(&ms, 0, sizeof(ms));
+    ms.num_harts = hart_count;
 
     for (unsigned int i = 0; i < 8; i++) {
         gpio_write(LED_PATT_INIT << i);
@@ -326,10 +333,20 @@ void bootrom_main(void) {
             case PROTOCOL_BOOT:
                 bootrom_running = false;
                 break;
+            case PROTOCOL_GET_NUM_HARTS:
+                protocol_get_num_harts(&ms);
+                break;
             default:
                 protocol_err(&ms);
         }
     }
 
     gpio_write(LED_PATT_BOOT);
+}
+
+void inc_hart_count(uint64_t *cnt) {
+    volatile int i = 0;
+    for (i = 0; i < 0x1000; i++) ;
+    __atomic_add_fetch(cnt, 1, __ATOMIC_ACQ_REL);
+    for (i = 0; i < 0x1000; i++) ;
 }

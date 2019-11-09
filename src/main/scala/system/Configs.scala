@@ -74,4 +74,4 @@ class MMIOPortOnlyConfig extends Config(
 
 class BaseFPGAConfig extends Config(new BaseConfig)
 class DefaultFPGAConfig extends Config(new WithNSmallCores(1) ++ new BaseFPGAConfig)
-class ADMPCIE9H7Config extends Config(new WithEdgeDataBits(256) ++ new WithNBigCores(32) ++ new BaseFPGAConfig)
+class ADMPCIE9H7Config extends Config(new WithEdgeDataBits(256) ++ new WithNBigCores(32) ++ new WithNoDebugPort ++ new BaseFPGAConfig)
