@@ -2,12 +2,8 @@
 
 set -eu
 
-echo $(pwd)
-
-if ! [[ $(pwd) = */rocket-chip/vivado ]]; then
-    echo "Please execute script from within the vivado directory only!"
-    exit 1
-fi
+# make sure we are in the right directory
+cd "$(dirname "$(readlink -f "$BASH_SOURCE")")"
 
 renice -n 10 $$
 make -j `nproc` -C ../vsim verilog CONFIG=ADMPCIE9H7Config
